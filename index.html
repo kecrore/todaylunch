@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오늘의 급식</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  
+  <style>
+    body {
+      background: linear-gradient(to right, #667eea, #764ba2);
+    }
+    .card {
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center h-screen text-gray-900">
+  <div class="container mx-auto p-4">
+    <div class="card bg-white p-8 rounded-lg max-w-lg mx-auto text-center">
+      <h1 class="text-3xl font-bold text-gray-800 mb-4">오늘의 급식 메뉴</h1>
+      <div id="meal-info" class="text-lg text-gray-700">로딩 중...</div>
+    </div>
+  </div>
+
+  <script>
+    // 오늘 날짜를 'YYYYMMDD' 형식으로 가져오는 함수
+    function getTodayDate() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}${month}${day}`;
+    }
+
+    // 급식 데이터 가져오기
+    async function fetchMealData() {
+      const todayDate = getTodayDate();
+      const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=7530475&MLSV_YMD=${todayDate}&TYPE=json`;
+      const mealInfoDiv = document.getElementById("meal-info");
+
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        // 급식 정보가 있는 경우 파싱 및 출력
+        if (data.mealServiceDietInfo) {
+          const meals = data.mealServiceDietInfo[1].row[0].DDISH_NM.split("<br/>");
+          mealInfoDiv.innerHTML = `<ul class="list-group">${meals.map(item => `<li class="list-group-item">${item}</li>`).join("")}</ul>`;
+        } else {
+          mealInfoDiv.textContent = "오늘 급식 정보가 없습니다.";
+        }
+      } catch (error) {
+        mealInfoDiv.textContent = "급식 정보를 불러오는데 실패했습니다.";
+        console.error("Error fetching meal data:", error);
+      }
+    }
+
+    // 페이지 로드 시 급식 정보 표시
+    document.addEventListener("DOMContentLoaded", fetchMealData);
+  </script>
+
+  <!-- Bootstrap JS (Optional) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
